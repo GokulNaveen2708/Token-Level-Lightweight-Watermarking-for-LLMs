@@ -111,3 +111,131 @@ def generate(model, tokenizer, prompt, key, gamma=0.5, delta=0.5, k=3,
         next_id = sample(logits, temperature=temperature, top_k=top_k)
         ids = torch.cat([ids, next_id], dim=1)
     return tokenizer.decode(ids[0], skip_special_tokens=True)
+
+```
+
+## 🧠 Theory & Detection
+
+This section formalizes the detection problem and provides practical guidance for **thresholds**, **p-values**, **short-text handling**, and **sliding-window** detection.
+
+---
+
+### Problem Setup
+
+Consider a generated token sequence \(x_{1:n}\) with tokenizer \(T\) and vocabulary \(\mathcal{V}\).
+At each step \(t\), the generator (with **secret key** \(K\)) defines a **green set** \(G_t \subset \mathcal{V}\) by seeding a deterministic PRNG with the rolling prefix and \(K\), and including the top \(\gamma\) fraction of tokens.
+
+Define indicator variables
+\[
+I_t = \mathbb{1}\{x_t \in G_t\}, \quad S_n = \sum_{t=1}^n I_t.
+\]
+
+**Null hypothesis \(H_0\)** (no watermark): tokens are sampled without the keyed bias; marginally,
+\[
+I_t \sim \text{Bernoulli}(\gamma) \quad \Rightarrow \quad \mathbb{E}[S_n] = \gamma n,\ \ \text{Var}(S_n) \approx n\gamma(1-\gamma).
+\]
+
+**Alternative \(H_1\)** (watermarked): green tokens receive a +\(\delta\) logit bonus,
+so the realized green rate \(p_\text{wm} = \Pr(x_t \in G_t)\) becomes \(> \gamma\), hence \(S_n\) tends to be larger.
+
+> **Key intuition:** under \(H_1\), the count of “token-in-green” events accumulates **above chance**.
+
+---
+
+### One-Sided z-Test (CLT Approximation)
+
+We use a standardized statistic:
+\[
+z = \frac{S_n - \gamma n}{\sqrt{n\,\gamma(1-\gamma)}}.
+\]
+Under \(H_0\) (for moderate \(n\)), \(z \approx \mathcal{N}(0,1)\) by the Central Limit Theorem.
+
+- **Decision rule:** declare “watermarked” if \(z \ge z_\tau\).
+- **p-value:** \(p = 1 - \Phi(z)\) (one-sided).
+
+#### Choosing a Threshold
+- \(z_\tau = 3.0 \Rightarrow \alpha \approx 1.35 \times 10^{-3}\)
+- \(z_\tau = 4.0 \Rightarrow \alpha \approx 3.17 \times 10^{-5}\)
+- \(z_\tau = 5.0 \Rightarrow \alpha \approx 2.87 \times 10^{-7}\)
+
+> In practice, **calibrate** \(z_\tau\) to hit your target **FPR** on a clean **human** validation set.
+
+---
+
+### Exact (Non-Asymptotic) Binomial Test (Recommended for Short Texts)
+
+For short sequences (\(n \lesssim 80\)), the normal approximation can be conservative or unstable.
+Use the exact binomial tail:
+\[
+p_{\text{exact}} = \Pr_{X \sim \text{Binom}(n,\gamma)}(X \ge S_n) = \sum_{k=S_n}^{n} \binom{n}{k}\gamma^k(1-\gamma)^{n-k}.
+\]
+- Report both **\(z\)** (for interpretability) and **\(p_{\text{exact}}\)** (for rigor).
+- Optionally use **mid-p** to reduce discreteness for borderline cases.
+
+---
+
+### Length Effects & Power
+
+Because \(\text{Std}[S_n] = \Theta(\sqrt{n})\), the **z-score grows like \(\sqrt{n}\)** when the green rate is elevated. Hence, detection strength **increases with length**.
+
+<p align="center">
+  <img src="docs/figures/zscore_vs_length.png" alt="Z-score growth as a function of generated token length" width="70%"/>
+  <br/>
+  <em>Figure: z-score increases with token length, improving detection power.</em>
+</p>
+
+---
+
+### Sliding-Window Detection (Long Documents)
+
+For long texts, attacks may concentrate edits in segments. Use a **windowed scan**:
+
+1. Choose window size \(w\) (e.g., 100–300 tokens) and stride \(s\) (e.g., 50–100).
+2. For each window, compute \(z_w\) (or \(p_{\text{exact}}\)).
+3. Aggregate:
+   - **Max-z** across windows (powerful but requires multiple-testing control).
+   - **Average-z** (stable, slightly less sensitive to local attacks).
+   - **Proportion of windows** exceeding threshold.
+
+**Multiple testing control:**  
+- **FWER** (strict): Bonferroni on \(\alpha / m\) for \(m\) windows.  
+- **FDR**: Benjamini–Hochberg on window p-values if you prefer sensitivity.
+
+---
+
+### Partial Watermarking / Mixed Texts
+
+If only a portion of the document is watermarked (e.g., copy-paste, edits, quotations), the **max-z** window often exposes the watermarked segment, while the **global z** may be diluted. Consider reporting both **global** and **windowed** decisions.
+
+---
+
+### Robustness to Edits & Paraphrasing
+
+Let \(\rho\) be the **edit rate** (fraction of tokens altered). Roughly,
+- The effective sample size is reduced to \((1-\rho) n\).
+- The realized green count \(S_n\) decreases, shrinking \(z\).
+
+Empirically, small \(\rho\) (1–10%) has modest impact; paraphrasing has a stronger effect but often leaves **detectable residue** at typical lengths.
+
+<p align="center">
+  <img src="docs/figures/robustness_edits.png" alt="Detection accuracy under paraphrasing and substitutions" width="70%"/>
+</p>
+
+---
+
+### Detector Outputs & Recommended Reporting
+
+Return a rich report:
+```json
+{
+  "n": 184,
+  "gamma": 0.5,
+  "green": 126,
+  "z": 6.21,
+  "p_value": 2.6e-10,
+  "decision": true,                 // z >= z_threshold
+  "z_threshold": 4.0,
+  "method": "z_one_sided + exact_binom_short",
+  "notes": "exact binomial used for n<=80; otherwise z + normal tail"
+}
+
