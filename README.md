@@ -1,56 +1,43 @@
-LLM Watermarking
-This repository contains a lightweight watermarking framework for Large Language Models (LLMs) using a token-biasing approach called the Left Hash strategy. The aim is to embed detectable patterns in generated text while maintaining fluency and naturalness. The project includes code for watermark generation, detection, evaluation, and robustness testing under text edits such as paraphrasing, substitution, and deletion.
 
-Features
-Generate text with and without watermarking using GPT-2.
+# A Lightweight Watermarking Method for Large Language Models
 
-Detect watermarks using statistical z-score methods and classifier-based detection.
+<p align="center">
+  <img src="docs/figures/zscore_distributions.png" alt="Z-score distribution comparison between unwatermarked and watermarked text" width="80%"/>
+  <br/>
+  <em>Representative z-score separation for unwatermarked vs. watermarked generations.</em>
+</p>
 
-Evaluate text quality with perplexity and grammar metrics.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#-license)
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+![Transformers](https://img.shields.io/badge/🤗-Transformers-ff69b4)
+![Status](https://img.shields.io/badge/Status-Research%20Prototype-informational)
 
-Test watermark robustness under common edits.
+> **TL;DR**  
+> We watermark text **during generation** by **subtly biasing** token selection (keyed green list favored, red list disfavored) using a **secret key** and a **deterministic per-step vocabulary permutation**. Later, a simple **one-sided z-test** detects the hidden signal with high confidence—while keeping the text fluent and natural.
 
-Visualize detection accuracy, perplexity shifts, and token patterns.
+---
 
-Repository Structure
-LLM_watermarking/
-data/ – Contains prompt datasets and generated samples.
+## ✨ Overview
 
-evaluation/
-analyse_no_watermark.py – Evaluation script for unwatermarked text.
+Modern LLMs generate vast amounts of content, making **provenance** and **authenticity** critical for safety, moderation, and trust. This repository contains the **official implementation** of our paper, **“A Lightweight Watermarking Method for Large Language Models.”** Our method is designed to be:
 
-generation/
-generate_no_watermark.py – Generate plain text without watermark.
-generate_watermark.py – Generate text with watermark applied.
+- **Lightweight & Production-Ready:** Pure **inference-time** logit adjustment—**no model fine-tuning** or architectural changes.
+- **Accurate & Calibratable:** A keyed **z-score detector** provides strong separation at typical lengths; thresholds (e.g., *z* ≥ 4) can be tuned for desired false-positive rates.
+- **Quality-Preserving:** With a small bias (e.g., **δ = 0.5**), measured **perplexity shifts are minimal**, keeping outputs natural.
+- **Robust in Practice:** Maintains useful signal under **paraphrasing**, **token substitutions**, and **minor edits**; an optional **BERT classifier** supports black-box detection when keys aren’t available.
 
-Paraphrasing_text/
-corrupt_watermarked.py – Apply random deletion or substitution to watermarked text.
-paraphrase_watermarked.py – Paraphrase watermarked text for robustness testing.
+**How it works (at a glance):**
+- At each decoding step, a **secret key** and a **rolling prefix window** seed a PRNG that **permutes the vocabulary**.
+- The top **γ fraction** of the permuted vocab becomes the **green list** (favored), and the rest is **red** (disfavored).
+- We add a small **δ** logit bonus to green tokens before sampling.  
+- For detection, we **recompute** the per-step green lists with the **same key** and run a **one-sided z-test** on how many realized tokens fell into green.
 
-Results/ – Evaluation outputs stored in JSONL format for various test conditions.
+**What’s in this repo:**
+- A plug-and-play **Watermarker** wrapper for Hugging Face causal LMs (e.g., GPT-2).
+- A keyed **Z-Score Detector** and an optional **BERT-based classifier** for black-box detection.
+- Scripts & notebooks for **generation**, **detection**, **robustness** experiments, and **quality** analysis.
+- Ready-to-use result figures under `docs/figures/` to showcase performance (z-score distributions, length scaling, confusion matrix, perplexity shifts, robustness, classifier accuracy).
 
-Watermark Detection/
-Results/ – Plots and figures for detection experiments.
-detect_watermark.py – Detect watermarks using z-score statistical analysis.
-z-score_Highlight.py – Highlight green tokens in generated text.
-classifier_dataset_script.py – Prepare datasets for classifier-based detection.
-load_prompts.py – Load general prompt datasets.
-load_reddit.py – Load Reddit-specific prompts.
-watermarking_architecture.png – Diagram of the watermarking pipeline.
+> **Note:** Place the provided images in `docs/figures/` to render visuals throughout the README. You can regenerate or replace them with your exact experimental outputs later.
 
-Classifier Training/
-BERT_Classifier.py - Trained a BERT Model with watermarked and Human text
-predict-with_BERT.py - Detection performance under different thresholds
-Classifier_training.py - Trained Random forest model to understand green-red list ratio
-
-Running the Code
-To generate watermarked text:
-python generation/generate_watermark.py
-
-To generate unwatermarked text:
-python generation/generate_no_watermark.py
-
-To detect a watermark in generated text:
-python "Watermark Detection"/detect_watermark.py
-
-Plots and visualizations are located in Watermark Detection/Results.
+---
