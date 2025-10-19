@@ -41,3 +41,73 @@ Modern LLMs generate vast amounts of content, making **provenance** and **authen
 > **Note:** Place the provided images in `docs/figures/` to render visuals throughout the README. You can regenerate or replace them with your exact experimental outputs later.
 
 ---
+
+## 🔬 Method (High Level)
+
+This method embeds a **statistical watermark** during generation by **gently nudging** the model toward a secret, per-step **green list** of tokens. The nudging is tiny (logit bonus **δ**) and keyed, so the pattern is **invisible without the key** but **recoverable** by recomputing the same green lists at detection time.
+
+### Core Idea
+
+At each decoding step *t*, we derive a **seed** from the last *k* tokens (the **rolling prefix**) and a **secret key**. Using this seed, we generate a deterministic **pseudorandom ranking** over the vocabulary and choose the top **γ** fraction as the **green list** \(G_t\). We then **add δ** to logits of tokens in \(G_t\) before sampling.
+
+- **Rolling Prefix:** the last *k* generated tokens (including prompt context if needed).
+- **Secret Key:** any secret string/bytes/number known to the generator & detector.
+- **γ (gamma):** green-list ratio (e.g., 0.5).
+- **δ (delta):** logit bonus applied to green tokens (e.g., 0.5).
+- **Deterministic PRNG:** ensures the same prefix + key recreates the same \(G_t\).
+
+> Intuition: each position has its **own** secret green set. When the model favors these sets *slightly* over time, the final text contains **more green tokens** than chance would allow, which a detector can measure statistically.
+
+---
+
+### Step-by-Step
+
+1. **Compute Seed:**  
+   \( \text{seed}_t = H(\text{prefix}_{t,k} \,\Vert\, \text{key}) \)  
+   where \(H\) is a cryptographic/non-cryptographic hash (implementation detail), \(\text{prefix}_{t,k}\) are the last \(k\) tokens, and \(\Vert\) denotes concatenation.
+
+2. **Rank Vocabulary (Deterministic):**  
+   Use the PRNG seeded by \(\text{seed}_t\) to assign each vocab id a **score**.  
+   - Efficient option: **hash-per-token** score \( s(v) = \text{Hash}(v, \text{seed}_t) \in [0,1) \) (no full permutation needed).
+   - Define \(G_t = \{v \mid s(v) < \gamma\}\).
+
+3. **Bias Logits:**  
+   For tokens in \(G_t\), add **δ** to their logits:  
+   \[
+   \ell'_v = \ell_v + \begin{cases}
+   \delta & \text{if } v \in G_t\\
+   0 & \text{otherwise}
+   \end{cases}
+   \]
+
+4. **Sample Next Token:**  
+   Sample with your usual decoding (e.g., top-k, temperature, nucleus). Append to the prefix and continue.
+
+5. **Repeat:**  
+   Update the rolling prefix and continue until the sequence is complete.
+
+---
+
+### Pseudocode (Generation)
+
+```python
+def stepwise_green_set(prefix_ids, key, gamma):
+    seed = H(prefix_ids[-k:], key)          # rolling prefix + secret key
+    def is_green(token_id):
+        s = hash01(token_id, seed)          # in [0,1)
+        return s < gamma
+    return is_green
+
+def generate(model, tokenizer, prompt, key, gamma=0.5, delta=0.5, k=3,
+             max_new_tokens=200, temperature=0.8, top_k=50):
+    ids = tokenizer(prompt, return_tensors="pt").input_ids
+    for _ in range(max_new_tokens):
+        logits = model(ids).logits[:, -1, :]          # last step logits
+
+        is_green = stepwise_green_set(ids[0].tolist(), key, gamma)
+        green_mask = vectorize_vocab_mask(is_green, vocab_size=logits.size(-1))
+        logits = logits + delta * green_mask          # apply bias
+
+        next_id = sample(logits, temperature=temperature, top_k=top_k)
+        ids = torch.cat([ids, next_id], dim=1)
+    return tokenizer.decode(ids[0], skip_special_tokens=True)
