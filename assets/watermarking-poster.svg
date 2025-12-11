@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1800" viewBox="0 0 1200 1800">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#0b3c5d"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#84cc16"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.25"/>
+    </linearGradient>
+    <filter id="soft-blur" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="80" />
+    </filter>
+  </defs>
+  <rect width="1200" height="1800" fill="url(#bg)"/>
+  <circle cx="200" cy="220" r="260" fill="url(#glow)" filter="url(#soft-blur)"/>
+  <circle cx="1100" cy="1600" r="220" fill="url(#glow)" filter="url(#soft-blur)"/>
+  <rect x="70" y="90" width="1060" height="1620" rx="36" ry="36" fill="rgba(15,23,42,0.65)" stroke="#22d3ee" stroke-width="2" opacity="0.9"/>
+
+  <text x="100" y="220" font-family="'Inter', 'Segoe UI', sans-serif" font-size="86" font-weight="800" fill="#e5e7eb" letter-spacing="1.5">
+    Token-Level Lightweight Watermarking
+  </text>
+  <text x="100" y="300" font-family="'Inter', 'Segoe UI', sans-serif" font-size="48" font-weight="600" fill="#22d3ee">
+    for Large Language Models
+  </text>
+  <rect x="100" y="350" width="240" height="14" rx="7" ry="7" fill="url(#accent)"/>
+
+  <g transform="translate(100, 470)">
+    <rect x="0" y="0" width="1000" height="280" rx="20" ry="20" fill="rgba(34,197,94,0.1)" stroke="#22c55e" stroke-width="1.5"/>
+    <text x="40" y="70" font-family="'Inter', 'Segoe UI', sans-serif" font-size="40" font-weight="700" fill="#bef264">Project Snapshot</text>
+    <text x="40" y="130" font-family="'Inter', 'Segoe UI', sans-serif" font-size="30" fill="#e5e7eb">• Robust watermark detection across paraphrased LLM outputs.</text>
+    <text x="40" y="180" font-family="'Inter', 'Segoe UI', sans-serif" font-size="30" fill="#e5e7eb">• Dataset curation, classifier training, and evaluation pipelines.</text>
+    <text x="40" y="230" font-family="'Inter', 'Segoe UI', sans-serif" font-size="30" fill="#e5e7eb">• Lightweight token-level signals optimized for speed & fidelity.</text>
+  </g>
+
+  <g transform="translate(100, 800)">
+    <rect x="0" y="0" width="470" height="420" rx="22" ry="22" fill="rgba(34,211,238,0.08)" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="30" y="70" font-family="'Inter', 'Segoe UI', sans-serif" font-size="36" font-weight="700" fill="#e0f2fe">Pipeline</text>
+    <text x="30" y="130" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#e5e7eb">1. Prompt & watermark token stream</text>
+    <text x="30" y="180" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#e5e7eb">2. Generate paraphrases & variants</text>
+    <text x="30" y="230" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#e5e7eb">3. Extract watermark features</text>
+    <text x="30" y="280" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#e5e7eb">4. Train lightweight classifier</text>
+    <text x="30" y="330" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#e5e7eb">5. Evaluate robustness & AUC</text>
+  </g>
+
+  <g transform="translate(610, 800)">
+    <rect x="0" y="0" width="490" height="420" rx="22" ry="22" fill="rgba(124,58,237,0.12)" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="30" y="70" font-family="'Inter', 'Segoe UI', sans-serif" font-size="36" font-weight="700" fill="#e9d5ff">Highlights</text>
+    <text x="30" y="130" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#f3e8ff">• Built for portfolio-ready storytelling.</text>
+    <text x="30" y="180" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#f3e8ff">• Clean vector lines for crisp export.</text>
+    <text x="30" y="230" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#f3e8ff">• Colors tuned for dark hero sections.</text>
+    <text x="30" y="280" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" fill="#f3e8ff">• Ready to drop into case studies.</text>
+    <text x="30" y="330" font-family="'Inter', 'Segoe UI', sans-serif" font-size="26" fill="#c084fc">Export: 1200 x 1800 (SVG)</text>
+  </g>
+
+  <g transform="translate(100, 1250)">
+    <rect x="0" y="0" width="1000" height="320" rx="20" ry="20" fill="rgba(15,23,42,0.55)" stroke="#38bdf8" stroke-width="1.2"/>
+    <text x="40" y="70" font-family="'Inter', 'Segoe UI', sans-serif" font-size="36" font-weight="700" fill="#a5f3fc">Why it matters</text>
+    <text x="40" y="130" font-family="'Inter', 'Segoe UI', sans-serif" font-size="30" fill="#e5e7eb">• Demonstrates responsible AI with verifiable provenance.</text>
+    <text x="40" y="180" font-family="'Inter', 'Segoe UI', sans-serif" font-size="30" fill="#e5e7eb">• Emphasizes lightweight design suitable for production LLMs.</text>
+    <text x="40" y="230" font-family="'Inter', 'Segoe UI', sans-serif" font-size="30" fill="#e5e7eb">• Highlights experimentation: paraphrasing, classification, evaluation.</text>
+  </g>
+
+  <text x="100" y="1640" font-family="'Inter', 'Segoe UI', sans-serif" font-size="26" fill="#94a3b8">Repository: Token-Level-Lightweight-Watermarking-for-LLMs</text>
+  <text x="100" y="1680" font-family="'Inter', 'Segoe UI', sans-serif" font-size="26" fill="#cbd5e1">Perfect for portfolio posters, decks, and case-study slides.</text>
+</svg>

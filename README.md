@@ -14,6 +14,10 @@
 > **TL;DR**
 > Watermark text **during generation** by **subtly biasing** token selection (keyed green list favored, red list disfavored) using a **secret key** and a **deterministic per-step vocabulary permutation**. Later, a simple **one-sided z-test** detects the hidden signal with high confidence—while keeping the text fluent and natural.
 
+### 🎨 Portfolio Poster
+
+- A ready-to-use, high-resolution poster for your portfolio is available at [`assets/watermarking-poster.svg`](assets/watermarking-poster.svg). Drop it into case studies, slides, or landing pages to quickly communicate the project’s highlights.
+
 ---
 
 ## ✨ Overview
